@@ -1,0 +1,601 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <base target="_top">
+
+  <style>
+  background-color: lightgreen;
+  input:required:invalid, select:required:invalid {
+  border: 1px solid red;
+  }
+  </style>
+</head>
+
+<body>
+  <button onclick="voltarTela()">←</button>
+  <h1>Movimentações da conta
+    <?= contaId ?>
+  </h1>
+
+  <h2>Saldo atual: R$ <span id="valor-saldo">0,00</span></h2>
+  <h2>Saldo previsto: R$ <span id="saldo-previsto">0,00</span></h2>
+  <p>Entrada: <span id="entrada-mes">0,00</span> | Saida: <span id="saida-mes">0,00</span> | Liquida: <span id="liquido-mes">0,00</span></p>
+
+  <button onclick="abrirModal()">Adicionar movimentação</button>
+  <button onclick="abrirModalTransferencia()">Adicionar transferencia</button>
+  <button onclick="abrirModalPagarfatura()">Pagar fatura</button>
+
+  <div id="modal-cadastro"
+    style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:1000;">
+
+    <div style="background:white; width:300px; margin:100px auto; padding:20px; border-radius:8px; position:relative;">
+      <h3>Nova Movimentação</h3>
+
+      <label>Data de vencimento:</label><br>
+      <input type="date" id="form-data" style="width:100%" required><br>
+
+      <label>Descrição:</label><br>
+      <input type="text" id="form-descricao" style="width:100%" required><br>
+
+      <label>Categoria:</label><br>
+      <select id="form-categoria" style="width:100%" required>
+        <option id="outros">Outros</option>
+        <option id="casa">Casa</option>
+        <option id="pessoal">Pessoal</option>
+      </select><br>
+
+      <label>Valor:</label><br>
+      <input type="number" id="form-valor" step="0.01" style="width:100%" required><br>
+
+      <label>Cartao de crédito</label><br>
+      <select id="form-cartao-credito" style="width:100%">
+        <option value=""></option>
+        <option value="cartao-A">Cartão Inter</option>
+        <option value="cartao-B">Cartão Nubank</option>
+        <option value="cartao-C">Cartão Nubank Lolo</option>
+      </select><br>
+
+      <label>Tipo:</label>
+      <select id="form-tipo" style="width:100%" required>
+        <option value="saida">Despesa</option>
+        <option value="entrada">Entrada</option>
+      </select><br>
+
+      <label>Repetir lançamento?</label><br>
+      <select id="form-repetir" style="width:100%">
+        <option value="">Não repetir</option>
+        <option value="parcelado">Parcelado</option>
+        <option value="fixa">Fixa</option>
+      </select>
+
+      <label>Quantidade de parcelas</label><br>
+      <input type="number" id="form-quantidadeparcelas" style="width:100%"><br>
+
+      <label>Status:</label><br>
+      <select id="form-status" style="width:100%">
+        <option value="pendente">Pendente</option>
+        <option value="pago">Pago</option>
+      </select><br>
+
+      <label>Data de pagamento:</label><br>
+      <input type="date" id="form-datapagamento" style="width:100%"><br>
+
+      <button onclick="salvarFormulario()">Salvar</button>
+      <button onclick="fecharModal()">Cancelar</button>
+    </div>
+  </div>
+
+  <div id="modal-transferencia" 
+    style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:1000;">
+    <div style="background:white; width:300px; margin:100px auto; padding:20px; border-radius:8px; position:relative;">
+      <h3>Nova transferencia</h3>
+
+      <label>Data da transferencia</label>
+      <input type="date" id="data-transferencia" style="width:100%"><br>
+
+      <label>Descrição</label>
+      <input type="text" id="descricao-transferencia" style="width:100%"><br>
+
+      <label>Categoria</label>
+      <select id="categoria-transferencia" style="width:100%">
+        <option value="outros">Outros</option>
+        <option value="investimento">Investimento</option>
+      </select><br>
+
+      <label>Valor:</label><br>
+      <input type="number" id="valor-transferencia" step="0.01" style="width:100%" required><br>
+
+      <label>Recorrencia:</label><br>
+      <select id="recorrencia-transferencia" style="width:100%">
+        <option value="">Não repetir</option>
+        <option value="parcelado">Parcelado</option>
+        <option value="fixa">Fixa</option>
+      </select>  
+
+      <label>Quantidade de parcelas</label>
+      <input type="number" id="quantidade-parcelas-transferencia" style="width:100%"><br>
+
+      <label>Conta destino</label>
+      <select id="conta-destino" style="width:100%">
+        <option value="conta1">Inter</option>
+        <option value="conta2">Nubank</option>
+        <option value="conta3">Picpay</option>
+        <option value="conta4">Clear</option>
+      </select><br>
+
+      <label>Status:</label><br>
+      <select id="status-transferencia" style="width:100%">
+        <option value="pendente">Pendente</option>
+        <option value="pago">Pago</option>
+      </select><br>
+
+      <label>Data de pagamento:</label><br>
+      <input type="date" id="data-efetiva-transferencia" style="width:100%"><br>
+
+      <button onclick="salvarTransferencia()">Salvar</button>
+      <button onclick="fecharModal()">Cancelar</button>            
+    </div>
+  </div>
+
+  <div id="modal-pagar-fatura" 
+    style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:1000;">
+    <div style="background:white; width:300px; margin:100px auto; padding:20px; border-radius:8px; position:relative;">
+      <h3>Pagar fatura</h3>
+      
+      <label>Data do pagamento</label>
+      <input type='date' id="data-fatura" style="width:100%"><br>
+
+      <label>Cartão que esta sendo pago</label>
+      <select id="cartao-fatura">
+        <option value=""></option>
+        <option value="cartao-A">Cartão inter</option>
+        <option value="cartao-B">Cartão nubank</option>
+        <option value="cartao-C">Cartão nubank Lolo</option>
+      </select><br>
+
+      <label>Conta origem</label>
+      <select id="contaOrigem-fatura" style="width:100%">
+        <option value=""></option>
+        <option value="conta1">Inter</option>
+        <option value="conta2">Nubank</option>
+        <option value="conta3">Picpay</option>
+        <option value="conta4">Clear</option>
+      </select><br>
+
+      <label>Valor para fatura</label>
+      <input type="number" id="valor-fatura" style="width:100%" step="0.01"><br>
+
+      <button onclick="salvarPagamentoFatura()">Salvar</button>
+      <button onclick="fecharModal()">Cancelar</button>    
+    </div>
+  </div>  
+
+  <hr>
+
+  <button id="anterior">←</button><span id="data">mes/ano</span><button id="proximo">→</button>
+
+  <div id='movimentacoes-container'>Carregando...</div>
+
+</body>
+
+<script>
+  let todasMovimentacoes = [];
+  const contaId = '<?= contaId ?>';
+  let linhaSendoEditada = null; // Variável global para controle
+  let saldoAtual = 0;
+  const container = document.getElementById('movimentacoes-container');
+  let idVinculadoSendoEditado = {};
+
+  //Consulta os dados ao carregar a tela
+  window.onload = function() {
+    recarregarDados();
+  }
+
+  function voltarTela(){
+    event.target.innerText = "Carregando tela...";
+    event.target.disabled = true;
+
+    google.script.run.withSuccessHandler(function(urlBase){
+      const novaUrl = urlBase 
+      window.top.location.href = novaUrl;
+    }).getScriptUrl();
+  };
+
+  //Função para atualizar a lista sem dar refresh na página
+  function recarregarDados() {
+    google.script.run.withSuccessHandler(function (resposta) {
+      if (!resposta) return;
+  
+      todasMovimentacoes = resposta.extrato;
+      saldoAtual = resposta.saldo;
+      
+      const spanSaldo = document.getElementById('valor-saldo');
+      spanSaldo.innerText = saldoAtual.toLocaleString('pt-BR', { 
+      minimumFractionDigits: 2, 
+      maximumFractionDigits: 2
+      });
+      
+      renderizar();
+    }).buscarDadosIniciais(contaId);
+  }
+
+  //Botão que navega pelos meses
+  let dataVisualizacao = new Date();
+  const elementoData = document.getElementById("data");
+
+  document.getElementById("anterior").addEventListener("click", () => mudarMes(-1));
+  document.getElementById("proximo").addEventListener("click", () => mudarMes(1));
+
+  function mudarMes(direcao) {
+  dataVisualizacao.setMonth(dataVisualizacao.getMonth() + direcao);
+  renderizar();
+  }
+
+  //Função que renderiza a visualização do usuario
+  function renderizar() {
+    const mesAlvo = dataVisualizacao.getMonth();
+    const anoAlvo = dataVisualizacao.getFullYear();
+    const nomesMeses = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"];
+
+    elementoData.innerHTML = `${nomesMeses[mesAlvo]} / ${anoAlvo}`;
+
+    const ultimoDiaDoMesVisualizado = new Date(anoAlvo, mesAlvo + 1, 0, 23, 59, 59);
+
+
+    const pendencias = todasMovimentacoes.filter(item => {
+      const partes = item["Data de vencimento"].split("/");
+      const dataVencimento = new Date(partes[2], partes[1] - 1, partes[0]);
+      
+      const ehPendente = item["Status"] === "pendente";
+      const estaNoPrazoOuAtrasado = dataVencimento <= ultimoDiaDoMesVisualizado;
+
+      return ehPendente && estaNoPrazoOuAtrasado;
+    });
+
+    const saldoPrevisto = pendencias.reduce((acumulado, item) => {
+      return acumulado + parseFloat(item["Valor"]);
+    }, saldoAtual); 
+
+    document.getElementById('saldo-previsto').innerText = saldoPrevisto.toLocaleString('pt-BR', { 
+      minimumFractionDigits: 2, 
+      maximumFractionDigits: 2
+    });
+
+    // --- TOTAIS DO MÊS VISUALIZADO (Entradas e Saídas) ---
+  
+    // Filtramos todas as movimentações do mês alvo, independente de estarem pagas ou não
+    const movimentacoesDoMes = todasMovimentacoes.filter(item => {
+      const partes = item["Data de vencimento"].split("/");
+      const dataItem = new Date(partes[2], partes[1] - 1, partes[0]);
+      return dataItem.getMonth() === mesAlvo && dataItem.getFullYear() === anoAlvo;
+    });
+
+    // Soma das Entradas do Mês
+    const totalEntradas = movimentacoesDoMes
+      .filter(item => item["Tipo"] === "entrada")
+      .reduce((acc, item) => acc + parseFloat(item["Valor"]), 0);
+
+    // Soma das Saídas do Mês (usamos Math.abs para mostrar valor positivo no resumo se preferir)
+    const totalSaidas = movimentacoesDoMes
+      .filter(item => item["Tipo"] === "saida")
+      .reduce((acc, item) => acc + parseFloat(item["Valor"]), 0);
+
+    // Atualiza os elementos na tela
+    document.getElementById('entrada-mes').innerText = totalEntradas.toLocaleString('pt-BR', { minimumFractionDigits: 2 });
+    document.getElementById('saida-mes').innerText = Math.abs(totalSaidas).toLocaleString('pt-BR', { minimumFractionDigits: 2 });
+    
+    const liquidoMes = totalEntradas + totalSaidas;
+    
+    document.getElementById('liquido-mes').innerText = liquidoMes.toLocaleString('pt-BR', {minimumFractionDigits: 2 });
+    
+    // Cores para os totais
+    document.getElementById('entrada-mes').style.color = "green";
+    document.getElementById('saida-mes').style.color = "red";
+
+    // FILTRAGEM: Pega apenas o que bate com o mês e ano selecionados
+    const dadosFiltrados = todasMovimentacoes.filter(item => {
+      const partes = item["Data de vencimento"].split("/");
+      const dataItem = new Date(partes[2], partes[1] - 1, partes[0]);
+
+      return dataItem.getMonth() === mesAlvo && dataItem.getFullYear() === anoAlvo;
+    });
+
+    // MONTAGEM DO HTML
+    if (dadosFiltrados.length === 0) {
+    container.innerHTML = "<p>Nenhuma movimentação neste mês.</p>";
+    return;
+    }
+
+    const colunas = ["Data de vencimento", "Descrição", "Categoria", "Valor", "Status", "Data do pagamento", "Recorrencia", "Ações"];
+    let html = `<table>
+      <thead>
+        <tr>`;
+          colunas.forEach(col => html += `<th>${col}</th>`);
+          html += `</tr>
+      </thead>
+      <tbody>`;
+
+      dadosFiltrados.forEach(item => {
+        html += '<tr>';
+        colunas.forEach(col => {
+          if (col === "Ações") {
+            html += `<td>
+                    <button onclick='prepararEdicao(${JSON.stringify(item)})'>✏️</button>
+                    <button onclick='confirmarExclusao(${item.linha})' style="color:red; margin-left:5px" title="Excluir">🗑️</button>
+                    </td>`;
+          } else {
+            html += `<td>${item[col] || ""}</td>`;
+          }
+        });
+        html += '</tr>';
+      });
+
+      container.innerHTML = html + '</tbody></table>';
+  }
+
+  function abrirModal() {
+    document.getElementById('modal-cadastro').style.display = 'block';
+  }
+
+  function abrirModalTransferencia() {
+    document.getElementById('modal-transferencia').style.display = 'block';
+  }
+
+  function abrirModalPagarfatura(){
+    document.getElementById('modal-pagar-fatura').style.display = 'block';
+  }
+
+  //Fecha e limpa o modal formulário de cadastro de movimentação e transferencia
+  function fecharModal() {
+    document.getElementById('modal-cadastro').style.display = 'none';
+    document.getElementById('form-data').value = '';
+    document.getElementById('form-descricao').value = '';
+    document.getElementById('form-categoria').value = "outros";
+    document.getElementById('form-valor').value = '';
+    document.getElementById('form-cartao-credito').value = '';
+    document.getElementById('form-tipo').value = 'saida';
+    document.getElementById('form-repetir').value = '';
+    document.getElementById('form-quantidadeparcelas').value = '';
+    document.getElementById('form-status').value = 'pendente';
+    document.getElementById('form-datapagamento').value = '';
+
+    document.getElementById('modal-transferencia').style.display = 'none';
+    document.getElementById('data-transferencia').value = '';
+    document.getElementById('descricao-transferencia').value = '';  
+    document.getElementById('categoria-transferencia').value = 'outros';
+    document.getElementById('valor-transferencia').value = '';
+    document.getElementById('recorrencia-transferencia').value = '';
+    document.getElementById('quantidade-parcelas-transferencia').value = '';
+    document.getElementById('conta-destino').value = '';
+    document.getElementById('status-transferencia').value = 'pendente';
+    document.getElementById('data-efetiva-transferencia').value = '';
+
+    document.getElementById('modal-pagar-fatura').style.display = 'none';
+    document.getElementById('data-fatura').value = '';
+    document.getElementById('cartao-fatura').value = '';
+    document.getElementById('contaOrigem-fatura').value = '';
+    document.getElementById('valor-fatura').value = '';
+
+    linhaSendoEditada = null;
+  }
+
+  //Envia uma movimentação (não transferencia) para o banco de dados
+  function salvarFormulario() {
+    const btn = event.target;
+    const campoData = document.getElementById('form-data').value;
+    const campoDescricao = document.getElementById('form-descricao').value;
+    const campoCategoria = document.getElementById('form-categoria').value;
+    let campoValor = parseFloat(document.getElementById('form-valor').value);
+    const campoTipo = document.getElementById('form-tipo').value;
+    let campoStatus = document.getElementById('form-status').value;
+    const campoPagamento = document.getElementById('form-datapagamento').value;
+    const campoRepetir = document.getElementById('form-repetir').value;
+    const campoParcelas = document.getElementById('form-quantidadeparcelas').value;
+    const campoCartaoCredito = document.getElementById('form-cartao-credito').value;
+    
+    if(campoRepetir === "parcelado" && !campoParcelas){
+      alert("Por favor, preencha a quantidade de parcelas.");
+      return;
+    }
+
+    if(!campoData || !campoDescricao || !campoValor){
+      alert("Por favor, preencha todos os campos obrigatórios.");
+      return;
+    }
+
+    if(campoStatus === "pago" && !campoPagamento){
+      alert("Por favor, informe a data de pagamento.");
+      return;
+    }
+
+    if(campoPagamento){
+      campoStatus = "pago";
+    }
+
+    if (campoTipo === "saida") {
+      campoValor = -Math.abs(campoValor);
+    } else {
+      campoValor = Math.abs(campoValor);
+    }
+
+    //Tratando as datas para o formato brasileiro antes de enviar
+    const dataVencimentoFormatada = campoData.split('-').reverse().join('/');
+    const dataPagamentoFormatada = campoPagamento.split('-').reverse().join('/'); 
+    
+    const contaFinal = campoCartaoCredito !== "" ? campoCartaoCredito : contaId;
+
+    const dados = {
+      linha: linhaSendoEditada,
+      idVinculo: idVinculadoSendoEditado,
+      editarTodos: false,   
+      dataVencimento: dataVencimentoFormatada,
+      descricao: campoDescricao,
+      categoria: campoCategoria,
+      valor: campoValor,
+      tipo: campoTipo,
+      status: campoStatus,
+      conta: contaFinal,
+      dataPagamento: dataPagamentoFormatada,
+      repetir: campoRepetir,
+      parcelas: campoParcelas,
+    }
+
+    if (linhaSendoEditada && idVinculadoSendoEditado) {
+      const mensagem = "Este lançamento faz parte de um grupo. Deseja atualizar TODOS os lançamentos deste grupo?";
+      if (confirm(mensagem)) {
+        dados.editarTodos = true;
+      }
+    }
+
+    btn.disabled = true;
+    btn.innerText = "Salvando...";
+
+    if (linhaSendoEditada) {
+    dados.linha = linhaSendoEditada; // Adiciona o ID ao objeto
+    google.script.run.withSuccessHandler(sucessoAoSalvar).atualizarMovimentacao(dados);
+    } else {
+    google.script.run.withSuccessHandler(sucessoAoSalvar).cadastrarMovimentacao(dados);
+    }
+    
+    function sucessoAoSalvar() {
+    fecharModal()
+    linhaSendoEditada = null;
+    recarregarDados();
+    btn.disabled = false;
+    btn.innerHTML = "Salvar";
+    }
+  }
+
+  function salvarTransferencia() {
+    const btn = event.target;
+    const dataTransferencia = document.getElementById('data-transferencia').value.split('-').reverse().join('/');
+    const descricaoTransferencia = document.getElementById('descricao-transferencia').value;
+    const categoriaTransferencia = document.getElementById('categoria-transferencia').value;
+    const valorTransferencia = parseFloat(document.getElementById('valor-transferencia').value);
+    const contaDestino = document.getElementById('conta-destino').value;
+    const statusTransferencia = document.getElementById('status-transferencia').value;
+    const dataEfetivaTransferencia = document.getElementById('data-efetiva-transferencia').value;
+    const recorrenciaTransferencia = document.getElementById('recorrencia-transferencia').value;
+    const quantidadeParcelasTransferencia = parseInt(document.getElementById('quantidade-parcelas-transferencia').value);
+ 
+    if(statusTransferencia === "pago" && !dataEfetivaTransferencia){
+      alert("Por favor, preencha a data que foi transferido efetivamente.");
+      return;
+    };
+
+    const dados = {
+      dataTransferencia: dataTransferencia,
+      descricaoTransferencia: descricaoTransferencia,
+      categoriaTransferencia: categoriaTransferencia,
+      valorTransferencia: valorTransferencia,
+      contaOrigem: contaId,
+      contaDestino: contaDestino,
+      statusTransferencia: statusTransferencia,
+      dataEfetivaTransferencia: dataEfetivaTransferencia,
+      recorrenciaTransferencia: recorrenciaTransferencia,
+      quantidadeParcelasTransferencia: quantidadeParcelasTransferencia,
+    };
+
+    btn.disabled = true;
+    btn.innerHTML = "Salvando...";
+
+    google.script.run.withSuccessHandler(function() {
+      fecharModal();
+      btn.disabled = false;
+      btn.innerHTML = "Salvar";
+      recarregarDados();
+    }).cadastrarTransferencia(dados);
+  }
+
+  function salvarPagamentoFatura() {
+    const btn = event.target;
+    const dataTransferencia = document.getElementById('data-fatura').value.split('-').reverse().join('/');
+    const descricaoTransferencia = "Pagamento de fatura de cartão de crédito";
+    const categoriaTransferencia = "";
+    const valorTransferencia = parseFloat(document.getElementById('valor-fatura').value);
+    const contaDestino = document.getElementById('cartao-fatura').value;
+    const statusTransferencia = "pago";
+    const dataEfetivaTransferencia = document.getElementById('data-fatura').value.split('-').reverse().join('/');
+    const recorrenciaTransferencia = "";
+    const quantidadeParcelasTransferencia = ""
+
+    const dados = {
+      dataTransferencia: dataTransferencia,
+      descricaoTransferencia: descricaoTransferencia,
+      categoriaTransferencia: categoriaTransferencia,
+      valorTransferencia: valorTransferencia,
+      contaOrigem: contaId,
+      contaDestino: contaDestino,
+      statusTransferencia: statusTransferencia,
+      dataEfetivaTransferencia: dataEfetivaTransferencia,
+      recorrenciaTransferencia: recorrenciaTransferencia,
+      quantidadeParcelasTransferencia: quantidadeParcelasTransferencia,
+    };
+
+    btn.disabled = true;
+    btn.innerHTML = "Salvando...";
+
+    google.script.run.withSuccessHandler(function() {
+      fecharModal();
+      btn.disabled = false;
+      btn.innerHTML = "Salvar";
+      recarregarDados();
+    }).cadastrarTransferencia(dados);
+  }
+
+  //Edita um lançamento que ja esta no banco de dados
+  function prepararEdicao(item) {
+    linhaSendoEditada = item.linha;
+    idVinculadoSendoEditado = item.idVinculo || item["idVinculo"] || null;
+    
+    document.getElementById('form-data').value = formatarParaInputDate(item["Data de vencimento"]);
+    document.getElementById('form-descricao').value = item["Descrição"];
+    document.getElementById('form-valor').value = Math.abs(item["Valor"]);
+    document.getElementById('form-categoria').value = item["Categoria"];
+    document.getElementById('form-status').value = item["Status"];
+    document.getElementById('form-datapagamento').value = formatarParaInputDate(item["Data do pagamento"]);
+    
+    const btn = document.querySelector("#modal-cadastro button[onclick='salvarFormulario()']");
+    btn.innerText = "Atualizar Lançamento";
+    
+    abrirModal();
+  }
+
+  // Auxiliar para converter DD/MM/YYYY para YYYY-MM-DD (que o input date exige)
+  function formatarParaInputDate(dataStr) {
+    if (!dataStr) return "";
+    const partes = dataStr.split("/");
+    return `${partes[2]}-${partes[1]}-${partes[0]}`;
+  }
+
+  function confirmarExclusao(linha) {
+    // 1. Primeiro, pegamos o item da nossa lista local para saber se ele tem vínculo
+    const item = todasMovimentacoes.find(i => i.linha === linha);
+    const idVinculo = item ? (item.idVinculo || item["idVinculo"]) : null;
+    
+    let excluirTudo = false;
+
+    // 2. Se tiver vínculo, perguntamos se quer excluir o grupo
+    if (idVinculo) {
+      const resposta = confirm("Este lançamento faz parte de um grupo. Deseja excluir TODOS os lançamentos deste grupo? \n\n(Clique em 'Cancelar' para excluir APENAS este)");
+      if (resposta) {
+        excluirTudo = true;
+      }
+    } else {
+      // Se não tiver vínculo, apenas confirma a exclusão simples
+      if (!confirm("Tem certeza que deseja excluir este lançamento?")) return;
+    }
+
+    // 3. Enviamos a linha e a decisão para o servidor
+    google.script.run
+      .withSuccessHandler(function() {
+        alert("Exclusão realizada!");
+        recarregarDados();
+      })
+      .excluirMovimentacao(linha, excluirTudo);
+  }
+
+</script>
+
+</html>
