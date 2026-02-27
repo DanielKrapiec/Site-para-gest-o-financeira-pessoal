@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <base target="_top">
+
+   </head>
+
+  <body>
+    <h1>Olá!</h1>
+  
+    <div class="dashboard">
+    <h3>Contas</h3>
+    <div class="coluna">
+    <div class="forma"/div>
+    <button id="conta1">conta 1 - Saldo: <span id="saldo-conta1">0,00</span></button><br>
+    <button id="conta2">conta 2 - Saldo: <span id="saldo-conta2">0,00</span></button><br>
+    //...
+  </div>
+  
+    <h2>Cartões de crédito</h2>
+    <div class="coluna">
+    <div class="forma"/div> 
+    <button id="cartao-1">Cartão 1</button>
+    <button id="cartao-2">Cartão 2</button>
+    //...
+  </body>
+
+  <script>
+    function extrato(contaId){
+      google.script.run.withSuccessHandler(function(urlBase){
+        const novaUrl = urlBase + "?conta=" + contaId;
+        window.top.location.href = novaUrl;
+      }).getScriptUrl();
+    };
+
+    function addListener(id){
+      document.getElementById(id).addEventListener("click", function(){
+        extrato(id);
+      })
+    };
+
+    addListener("conta1");
+    addListener("conta2");
+    //...
+
+    const saldoConta1 = document.getElementById('saldo-conta1');
+    const saldoConta2 = document.getElementById('saldo-conta2');
+    //...
+
+  window.onload = function(){
+
+      google.script.run.withSuccessHandler(function (saldos){
+
+        saldoConta1.innerHTML = saldos.saldoConta1.toLocaleString('pt-BR', {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+      });
+
+        saldoConta2.innerHTML = saldos.saldoConta2.toLocaleString('pt-BR', {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+      });
+      //...
+
+      }).buscarDadosIniciaisMenu();
+    }
+
+  </script>  
+    </html>
